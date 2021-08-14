@@ -1,14 +1,13 @@
 from typing import List
 
+import uvicorn
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
-from . import crud, models, schemas
-from .database import SessionLocal, engine, autocommit_engine
-
+from sql_app import crud, models, schemas
+from sql_app.database import SessionLocal, engine, autocommit_engine
 
 models.Base.metadata.create_all(bind=engine)
-
 
 app = FastAPI()
 
@@ -76,6 +75,26 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return items
 
 
+@app.put("/{user_id}", response_model=schemas.User)
+def update_user(
+    *,
+    db: Session = Depends(get_db),
+    user_id: int,
+    user_in: schemas.User,
+):
+    """
+    Update a user.
+    """
+    user = crud.get_user(db, user_id=user_id)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this username does not exist in the system",
+        )
+    user = crud.update_user(db, db_obj=user, obj_in=user_in)
+    return user
+
+
 @app.get("/context-managers/")
 def context_manager(db: Session = Depends(get_db)):
     crud.context_manager(db)
@@ -94,3 +113,7 @@ def savepoint(db: Session = Depends(get_db)):
 @app.get("/savepoint-with-context-manager/")
 def savepoint_with_context_manager(db: Session = Depends(get_db)):
     crud.savepoint_with_context_manager(db)
+
+
+if __name__ == "__main__":
+    uvicorn.run("sql_app.main:app", host="127.0.0.1", port=8000, log_level="info")

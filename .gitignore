@@ -132,3 +132,5 @@ dmypy.json
 
 # VSCode
 .vscode/
+/sql_app.db
+/sql_app/sql_app.db

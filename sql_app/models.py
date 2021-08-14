@@ -10,8 +10,15 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
+    # It is strongly recommended that the version_id column be made NOT NULL.
+    # The versioning feature does not support a NULL value in the versioning column.
+    version_id = Column(Integer, nullable=False)
 
     items = relationship("Item", back_populates="owner")
+
+    __mapper_args__ = {
+        "version_id_col": version_id
+    }
 
 
 class Item(Base):
